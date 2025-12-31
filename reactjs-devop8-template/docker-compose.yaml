@@ -1,0 +1,18 @@
+services: 
+  reactjs-srv: 
+    image: imagename
+    container_name: reactjs-container 
+    ports: 
+      - "3000:80"
+    labels: 
+      - "traefik.enable=true"
+      - "traefik.http.routers.reactjs.tls=true"
+      - "traefik.http.routers.reactjs.rule=Host(`earthdx.devnerd.store`)"
+      - "traefik.http.routers.reactjs.entrypoints=web,websecure"
+      - "traefik.http.routers.reactjs.tls.certresolver=letsencrypt"
+      # - "traefik.http.services.reactjs.loadbalancer.server.port=3000"
+    networks: 
+      - proxy
+networks: 
+  proxy:
+    external: true 

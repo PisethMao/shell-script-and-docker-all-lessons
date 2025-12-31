@@ -1,0 +1,53 @@
+on:
+  push:
+    branches: [ "non-existing-branch" ]
+
+env:
+  # NEXUS_REGISTRY: registry-new.devnerd.store # nexus repo for storing docker image 
+  IMAGE_NAME: reactjs-image-nexus
+  # TAG: "v0.1.0" # version dynamic 
+  # HELM_REPO: keoKAY/helm-sample-one.git
+  
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest 
+    environment: DOCKER_REPOSITORY
+    steps: 
+      - name: Checkout Code 
+        uses: actions/checkout@v3
+      - name: Use with SHA 
+        run: | 
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      - name: Show the TAGS values
+        run: |
+          echo "TAG value is : ${{ env.TAG }}"
+      - name: Login to Docker Registry 
+        run: |
+          echo "${{ secrets.PASSWORD }}" | docker login -u ${{ secrets.USERNAME }} --password-stdin
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} .
+      - name: Push the Docker image 
+        run: |
+          docker push ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }}
+      - name: Logout from the Registry
+        if: always()
+        run: |
+          docker logout 
+  deploy-service: 
+    needs: build-and-push
+    runs-on: self-hosted # self-hosted is the our machine
+    steps: 
+      - name: Checkout Code 
+        uses: actions/checkout@v3
+      - name: Use with SHA 
+        run: | 
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      - name: Stop the container 
+        run: |
+          docker compose down 
+      - name: Using yq in order to edit the docker compose part 
+        run: |
+          yq eval '.services.reactjs-srv.image="69966/${{env.IMAGE_NAME }}:${{ env.TAG }}"' -i docker-compose.yaml
+      - name: Run the container 
+        run: |
+          docker compose up -d 

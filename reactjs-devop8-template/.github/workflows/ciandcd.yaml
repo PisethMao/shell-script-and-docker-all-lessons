@@ -1,0 +1,116 @@
+on:
+  push:
+    # branches: [ "master" ]
+    branches: 
+      - non-existing-branch
+
+env:
+  NEXUS_REGISTRY: registry-new.devnerd.store # nexus repo for storing docker image 
+  IMAGE_NAME: reactjs-image-nexus
+  # TAG: "v0.1.0" # version dynamic 
+  HELM_REPO: keoKAY/helm-sample-one.git
+  
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest 
+    # runs-on: self-hosted # this is the self-hosted options 
+    # UI , configured secret for this environment 
+    environment: NEXUS_REPOSITORY
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Use with SHA
+      run: |
+        echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+    - name: Show the new tags value
+      run: |
+        echo "Tag value is: ${{ env.TAG }}"
+
+ 
+    - name: Login to Nexus Registry
+      run: |
+        echo "${{ secrets.PASSWORD }}" | docker login ${{ env.NEXUS_REGISTRY }} -u ${{ secrets.USERNAME }} --password-stdin
+
+    - name: Build Docker image
+      run: docker build -t ${{ env.NEXUS_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} .
+ 
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ env.NEXUS_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+    - name: Logout from Nexus Registry 
+      if: always() # this ensure the logout runs even if the previous step fails. 
+      run: |
+        docker logout ${{ env.NEXUS_REGISTRY }}
+  update-helm-repo: 
+    needs: build-and-push
+    runs-on: ubuntu-latest 
+    environment: HELM_REPO 
+    steps:  
+      - name: Installing yq for easily work with the values file 
+        run: |
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+
+      - name: Use with SHA
+        run: |
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      - name: Showing the tags value 
+        run: | 
+          echo "This is the value of tag : ${{ env.TAG }}"
+      - name: Checkout Helm repository
+        run: |
+          git clone https://${{ secrets.GIT_TOKEN }}@github.com/${{ env.HELM_REPO }} helm-repo
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+      - name: Update Helm chart
+        env: 
+          NEXUS_REPOSITORY: ${{ env.NEXUS_REPOSITORY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          TAG: ${{ env.TAG }}
+        run: |
+          
+          cd helm-repo 
+          yq -i ".image.repository=\"${{ env.NEXUS_REGISTRY }}/${{ env.IMAGE_NAME }}\"" nginx-argocd-chart/values.yaml
+          
+          yq -i ".image.tag=\"${{ env.TAG }}\"" nginx-argocd-chart/values.yaml
+
+          git config --global user.email "your-email"
+          git config --global user.name "git-fullname"
+          git add .
+          git commit -m "Update image to ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+          git push https://${{ secrets.GIT_TOKEN }}@github.com/${{ env.HELM_REPO }}
+      - name: Clean up
+        run: |
+          rm -rf helm-repo
+
+
+
+
+# this is in case you are working with jenkins 
+    # - name: Checkout Helm repository
+    #   run: |
+    #     mkdir -p ~/.ssh
+    #     echo "${{ secrets.HELM_REPO_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+    #     chmod 600 ~/.ssh/id_rsa
+    #     ssh-keyscan github.com >> ~/.ssh/known_hosts
+    #     git clone git@github.com:${{ secrets.HELM_REPO }} helm-repo
+    #   env:
+    #     HELM_REPO_DEPLOY_KEY: ${{ secrets.HELM_REPO_DEPLOY_KEY }}
+
+    # - name: Update Helm chart
+    #   run: |
+    #     cd helm-repo
+    #     sed -i "s|image:.*|image: ${{ env.NEXUS_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}|" charts/mychart/values.yaml
+    #     git config --global user.email "action@github.com"
+    #     git config --global user.name "GitHub Action"
+    #     git add .
+    #     git commit -m "Update image to ${{ env.IMAGE_NAME }}:${{ env.TAG }}"
+    #     git push
+
+    #   - name: Clean up SSH key
+    #     run: |
+    #       rm -f ~/.ssh/id_rsa

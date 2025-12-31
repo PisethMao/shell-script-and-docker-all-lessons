@@ -1,0 +1,83 @@
+@import url("https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@200;400;700&family=Montserrat:wght@300;400;600;700;800;900&family=Poppins:wght@200;600&display=swap");
+
+* {
+  font-family: "Montserrat","Kantumruy Pro" ,sans-serif;
+  font-weight: 400;
+}
+
+.header-title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+}
+
+.feature-title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.item-card h2 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.item-card img {
+  object-fit: contain;
+  filter: drop-shadow(0px 10px 14px rgba(0, 0, 0, 0.449));
+}
+.item-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 0 4px rgba(16, 133, 69, 0.133);
+ /*  i have remove the paddingbootom */
+}
+
+.section3 .image-side {
+  text-align: center;
+}
+ 
+.section3 .text-side {
+  flex-grow: 1;
+  flex-shrink: 3;
+}
+.section3 ul {
+  margin-top: 40px;
+}
+
+.section3 .text-side ul li {
+  /* width: 70%; */
+  list-style: none;
+  padding: 5px 0;
+}
+.section3 .text-side ul li::before {
+  content: "✓";
+  color: #108545;
+  font-size: 1.5rem;
+  padding-right: 10px;
+  font-weight: bolder;
+}
+
+
+
+.section4 .text-side {
+  margin-top: 70px;
+  /* width: 60%; */
+
+}
+.section4 .text-side p {
+  margin-top: 40px;
+
+  /* width: 70%; */
+}
+.section4 .image-side img {
+  background-color: orange;
+  width: 100%;
+}
+
+.btn-success {
+ filter: drop-shadow(0px 10px 14px rgba(0, 0, 0, 0.449));
+ font-weight: bold;
+}
+
+
