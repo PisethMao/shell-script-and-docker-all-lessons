@@ -1,0 +1,74 @@
+
+# set condition for when to run the action files 
+on: 
+  push: 
+    branches: ["master"]
+# build docker image , push dockerhub
+env: 
+  DOCKER_IMAGE_NAME: k8s-reactjs-dev09
+  HELM_REPO: keoKAY/first-helm-argo-repo-dev09
+jobs: 
+  ci-job: 
+    runs-on: ubuntu-latest 
+    environment: DOCKER_ENV
+    steps: 
+      - name: Checkout code 
+        uses: actions/checkout@v3
+      - name: Using Commit SHA 
+        run: |
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      - name: Show the SHA values 
+        run: |
+          echo "TAG = ${{env.TAG }}"
+      - name: Login to Dockerhub 
+        run: |
+          echo "${{ secrets.PASSWORD }}" | docker login -u ${{secrets.USERNAME}} --password-stdin
+      - name: Build and Tag 
+        run: |
+          docker build -t ${{ secrets.USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{env.TAG }} .
+      - name: Push to Dockerhub 
+        run: |
+          docker push ${{ secrets.USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{env.TAG }}
+      - name: Logout from Dockerhub 
+        if: always()
+        run: |
+          docker logout 
+# update helm repo with new image
+  cd-job: 
+    needs: ci-job
+    runs-on: ubuntu-latest 
+    environment: HELM_ENV
+    steps: 
+      - name: Install yq command 
+        run: |
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+      - name: Add Commit SHA to TAG env 
+        run: |
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      
+      # clone the helm repo remporarily 
+      - name: Clone argocd repo 
+        run: | 
+          git clone https://github.com/${{ env.HELM_REPO }} helm_repo 
+      - name: Update Helm Chart 
+        run: |
+          cd helm_repo/reactjs-plants-chart
+
+          echo "Update repository username/imagename "
+
+          yq -i ".image.repository=\"${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME}}\"" values.yaml
+
+          echo "Update image tag "
+          yq -i ".image.tag=\"${{ env.TAG }}\"" values.yaml
+
+          git config --global user.email "username@example.com"
+          git config --global user.name "dummyname"
+          git add . 
+          git commit -m "Update helm to use image ${{ env.TAG }}"
+          
+          git push https://${{ secrets.GIT_TOKEN }}@github.com/${{ env.HELM_REPO }}
+      
+      - name: Clean up 
+        run: | 
+          rm -rf helm_repo

@@ -1,0 +1,17 @@
+services:
+  react-cont:
+    image: reactjs:latest
+    container_name: reactjs_cont
+    ports:
+      - "3000:80"
+      - "9090:80"
+  nginx-prod:
+    image: nginx:latest
+    ports:
+      - "9090:80"
+    volumes:
+      - nginx-vol:/etc/nginx/nginx.conf:rw
+networks:
+  my-network:
+volumes:
+  my-vol:

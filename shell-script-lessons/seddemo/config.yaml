@@ -1,0 +1,11 @@
+# This is the nginx (docker compose)
+# .yml or .yaml
+services:
+  nginx-svc:
+
+    container_name: nginx_container
+    image: nginx:latest
+    ports:
+      - "9091:80"
+    volumes:
+      - nginx-vol:/usr/share/nginx

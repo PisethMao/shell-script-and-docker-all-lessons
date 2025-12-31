@@ -1,0 +1,23 @@
+# Java
+target/
+build/
+.gradle/
+*.log
+
+# Env
+.env
+.env.*
+
+# Node (if used)
+node_modules/
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

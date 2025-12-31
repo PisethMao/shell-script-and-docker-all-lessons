@@ -1,0 +1,31 @@
+on:
+  push:
+    branches: [ "non-exists" ]
+
+env:
+  IMAGE_NAME: reactjs-afternoon-fullstack
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest 
+    environment: DOCKER_REPOSITORY
+    steps: 
+      - name: Checkout Code 
+        uses: actions/checkout@v3
+      - name: Use with SHA 
+        run: | 
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      - name: Show the TAGS values
+        run: |
+          echo "TAG value is : ${{ env.TAG }}"
+      - name: Login to Docker Registry 
+        run: |
+          echo "${{ secrets.PASSWORD }}" | docker login -u ${{ secrets.USERNAME }} --password-stdin
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} .
+      - name: Push the Docker image 
+        run: |
+          docker push ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }}
+      - name: Logout from the Registry
+        if: always()
+        run: |
+          docker logout 

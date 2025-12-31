@@ -1,0 +1,29 @@
+test:
+    echo "Testing from justfile 😁";
+    echo "Current date is: $(date)";
+
+greeting:
+    echo "Current user is: $(whoami)";
+    echo "Logined at: $(date)";
+
+username := "$(whoami)"
+infra option:
+    #!/bin/bash
+    echo "User option is: {{option}}"
+    case {{option}} in
+        "up")
+            echo "Bringing the infra up 👆";
+            echo "1 Write nginx config to target directory";
+            echo "Username is: {{username}}";
+            echo "2 Starting docker containers
+                    This is another line.
+                    This is another line." > message.txt;
+            cat message.txt;
+            ;;
+        "down")
+            echo "Bringing the infra down 👇";
+            ;;
+        *)
+            echo "❌ Invalid option! just infra up|down";
+            ;;
+    esac

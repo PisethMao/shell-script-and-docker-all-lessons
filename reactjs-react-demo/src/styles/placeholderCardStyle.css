@@ -1,0 +1,18 @@
+ 
+
+.placeholder-card {
+    & .image-pard{
+             position: relative;
+ 
+             & .inner-part{
+                 position: absolute; 
+                 right: 0;
+                 bottom: -50px;
+                 
+             }
+ 
+    }
+ 
+ 
+ 
+ }

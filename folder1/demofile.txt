@@ -1,0 +1,3 @@
+Hello World
+This is the file opened with vim.
+This is another line inside vim.

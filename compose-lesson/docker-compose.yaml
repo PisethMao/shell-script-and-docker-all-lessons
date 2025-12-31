@@ -1,0 +1,27 @@
+services:
+  nginx-1:
+    image: nginx:mainline-alpine3.23-slim
+    container_name: nginx-container-1
+    ports:
+      - 3080:80
+    volumes:
+      - nginx-vol:/usr/share/nginx/html
+      # - ./nginx-1/conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - nginx-network
+  nginx-2:
+    image: nginx:mainline-alpine3.23-slim
+    container_name: nginx-container-2
+    ports:
+      - 3081:80
+    volumes:
+      - nginx-vol:/usr/share/nginx/html
+      # - ./nginx-2/conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - nginx-network
+networks:
+  nginx-network:
+    # driver: bridge
+volumes:
+  nginx-vol:
+    # driver: local

@@ -1,0 +1,3 @@
+services:
+    nginx-service:
+        container_name: nginx-cont
